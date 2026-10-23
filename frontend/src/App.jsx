@@ -3,6 +3,7 @@ import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import StatCard from "./components/StatCard";
 import DeviceTable from "./components/DeviceTable";
+import SensorChart from "./components/SensorChart";
 
 const devices = [
   {
