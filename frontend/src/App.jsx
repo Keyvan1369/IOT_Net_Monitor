@@ -77,7 +77,7 @@ function App() {
             <section className="welcome-section">
               <div>
                 <h2>Network Overview</h2>
-                <p>Monitor your network and connected IoT devices.</p>
+                
               </div>
             </section>
 
@@ -184,7 +184,7 @@ function App() {
             <p className="text-secondary mb-3">
               Temperature: 24.6 °C · Humidity: 55.2% (sample data)
             </p>
-            
+
             <SensorChart />
           </div>
         )}
