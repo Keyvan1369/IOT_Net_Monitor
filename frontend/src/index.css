@@ -341,3 +341,35 @@ body {
     padding: 15px;
   }
 }
+
+.search-addon,
+.search-input {
+  background-color: #0e1729;
+  border-color: #29384d;
+  color: #e5edf8;
+}
+
+.search-addon {
+  color: #8392aa;
+}
+
+.search-input::placeholder {
+  color: #71819a;
+}
+
+.search-input:focus {
+  background-color: #0e1729;
+  color: #e5edf8;
+  border-color: #55b8ff;
+  box-shadow: 0 0 0 0.2rem rgb(85 184 255 / 12%);
+}
+
+.search-input option {
+  background-color: #111c2e;
+  color: #e5edf8;
+}
+
+.device-count {
+  color: #8392aa;
+  font-size: 11px;
+}
