@@ -11,7 +11,7 @@ function Sidebar({ activePage, setActivePage }) {
     <aside className="sidebar">
       <div className="brand">
         <i className="bi bi-activity"></i>
-        <span>NetPulse</span>
+        <span>EKA</span>
       </div>
 
       <p className="sidebar-label">MONITORING</p>
@@ -34,7 +34,7 @@ function Sidebar({ activePage, setActivePage }) {
       <div className="sidebar-footer">
         <span className="status-dot"></span>
         Local Network
-        <small>Monitoring Dashboard</small>
+        
       </div>
     </aside>
   );

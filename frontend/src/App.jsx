@@ -87,28 +87,28 @@ function App() {
                 value={devices.length}
                 icon="bi-hdd-network"
                 color="blue"
-                subtitle="Configured devices"
+                subtitle=""
               />
               <StatCard
                 title="Online Devices"
                 value={devices.length}
                 icon="bi-check-circle"
                 color="green"
-                subtitle="Demo status only"
+                subtitle=""
               />
               <StatCard
                 title="Temperature"
                 value="24.6 °C"
                 icon="bi-thermometer-half"
                 color="orange"
-                subtitle="Sample sensor reading"
+                subtitle=""
               />
               <StatCard
                 title="Humidity"
                 value="55.2%"
                 icon="bi-droplet"
                 color="purple"
-                subtitle="Sample sensor reading"
+                subtitle=""
               />
             </section>
 
@@ -118,7 +118,7 @@ function App() {
                   <div className="panel-heading">
                     <div>
                       <h5>Network Devices</h5>
-                      <p>Infrastructure inventory</p>
+
                     </div>
                     <i className="bi bi-diagram-3 panel-icon"></i>
                   </div>
@@ -132,7 +132,7 @@ function App() {
                   <div className="panel-heading">
                     <div>
                       <h5>Latest Sensor Readings</h5>
-                      <p>Sample values</p>
+
                     </div>
                   </div>
 
@@ -153,8 +153,7 @@ function App() {
                   </div>
 
                   <div className="info-note">
-                    <i className="bi bi-info-circle me-2"></i>
-                    Real sensor integration will be added later.
+
                   </div>
                 </div>
               </div>
@@ -197,7 +196,7 @@ function App() {
         )}
 
         <footer className="page-footer">
-          NetPulse · React + JavaScript + Bootstrap
+          EKA firma
         </footer>
       </main>
     </div>
