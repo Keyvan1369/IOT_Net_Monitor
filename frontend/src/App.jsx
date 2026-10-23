@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import StatCard from "./components/StatCard";
@@ -113,13 +112,19 @@ function App() {
               />
             </section>
 
+            {/* اضافه شده: نمودار سنسورها در بخش Overview */}
+            <section className="row g-3 mb-4">
+              <div className="col-12">
+                <SensorChart />
+              </div>
+            </section>
+
             <section className="row g-3">
               <div className="col-12 col-xl-8">
                 <div className="panel h-100">
                   <div className="panel-heading">
                     <div>
                       <h5>Network Devices</h5>
-
                     </div>
                     <i className="bi bi-diagram-3 panel-icon"></i>
                   </div>
@@ -133,7 +138,6 @@ function App() {
                   <div className="panel-heading">
                     <div>
                       <h5>Latest Sensor Readings</h5>
-
                     </div>
                   </div>
 
@@ -153,9 +157,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="info-note">
-
-                  </div>
+                  <div className="info-note"></div>
                 </div>
               </div>
             </section>
@@ -179,9 +181,11 @@ function App() {
             <div className="panel-heading">
               <h5>Sensor Monitoring</h5>
             </div>
-            <p className="text-secondary">
+            <p className="text-secondary mb-3">
               Temperature: 24.6 °C · Humidity: 55.2% (sample data)
             </p>
+            
+            <SensorChart />
           </div>
         )}
 
