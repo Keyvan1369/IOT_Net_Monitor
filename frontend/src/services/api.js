@@ -30,3 +30,12 @@ export async function getHealth() {
 
   return response.json();
 }
+export async function getSensorHistory() {
+  const response = await fetch(`${API_URL}/sensors/history`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch sensor history");
+  }
+
+  return response.json();
+}
