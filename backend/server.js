@@ -20,8 +20,9 @@ const io = new Server(server, {
   cors: { origin: FRONTEND_ORIGIN },
 });
 
-//sample data
+
 const latestReadings = new Map();
+const sensorHistory = [];
 
 const devices = [
   {
@@ -78,6 +79,10 @@ app.get("/api/sensors/latest", (req, res) => {
   res.json(Array.from(latestReadings.values()));
 });
 
+app.get("/api/sensors/history", (req, res) => {
+  res.json(sensorHistory);
+});
+
 app.post("/api/sensors", (req, res) => {
   const { deviceId, temperature, humidity } = req.body;
 
@@ -108,6 +113,11 @@ app.post("/api/sensors", (req, res) => {
   };
 
   latestReadings.set(deviceId, reading);
+  sensorHistory.push(reading);
+
+  if (sensorHistory.length > 100) {
+    sensorHistory.shift();
+  }
 
   io.emit("sensor:update", reading);
 
