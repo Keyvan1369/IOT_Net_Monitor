@@ -64,6 +64,9 @@ function App() {
           <div>
             <h5>{activePage}</h5>
             <p>IoT Network Monitoring System</p>
+            <p>test automation</p>
+
+
           </div>
 
           <span className={`connection-status ${backendStatus.toLowerCase()}`}>
@@ -121,7 +124,7 @@ function App() {
                   <div className="col-12">
                     <SensorChart data={sensorHistory.length > 0 ? sensorHistory : sensors} />
                   </div>
-                  
+
                 </section>
 
                 <section className="row g-3">
