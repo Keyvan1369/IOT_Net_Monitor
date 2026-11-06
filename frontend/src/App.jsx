@@ -3,12 +3,13 @@ import Sidebar from "./components/Sidebar";
 import StatCard from "./components/StatCard";
 import DeviceTable from "./components/DeviceTable";
 import SensorChart from "./components/SensorChart";
-import { getDevices, getLatestSensors, getHealth } from "./services/api";
+import { getDevices, getLatestSensors, getHealth, getSensorHistory } from "./services/api";
 
 function App() {
   const [activePage, setActivePage] = useState("Overview");
   const [devices, setDevices] = useState([]);
   const [sensors, setSensors] = useState([]);
+  const [sensorHistory, setSensorHistory] = useState([]);
   const [backendStatus, setBackendStatus] = useState("Checking");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,16 +19,18 @@ function App() {
 
     async function loadDashboard() {
       try {
-        const [deviceData, sensorData, healthData] = await Promise.all([
+        const [deviceData, sensorData, healthData, historyData] = await Promise.all([
           getDevices(),
           getLatestSensors(),
           getHealth(),
+          getSensorHistory()
         ]);
 
         if (cancelled) return;
 
         setDevices(deviceData || []);
         setSensors(sensorData || []);
+        setSensorHistory(historyData || []);
         setBackendStatus(healthData?.status === "ok" ? "Online" : "Offline");
         setError("");
       } catch (err) {
@@ -47,7 +50,6 @@ function App() {
     };
   }, []);
 
-  // محاسبه آخرین مقادیر سنسورها از داده دریافت‌شده
   const latestSensor = sensors.length > 0 ? sensors[sensors.length - 1] : null;
   const tempValue = latestSensor?.temperature != null ? `${latestSensor.temperature} °C` : "N/A";
   const humidityValue = latestSensor?.humidity != null ? `${latestSensor.humidity}%` : "N/A";
@@ -117,7 +119,7 @@ function App() {
 
                 <section className="row g-3 mb-4">
                   <div className="col-12">
-                    <SensorChart data={sensors} />
+                    <SensorChart data={sensorHistory.length > 0 ? sensorHistory : sensors} />
                   </div>
                 </section>
 
@@ -187,7 +189,7 @@ function App() {
                   Temperature: {tempValue} · Humidity: {humidityValue}
                 </p>
 
-                <SensorChart data={sensors} />
+                <SensorChart data={sensorHistory.length > 0 ? sensorHistory : sensors} />
               </div>
             )}
 
