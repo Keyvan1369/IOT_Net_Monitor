@@ -121,6 +121,7 @@ function App() {
                   <div className="col-12">
                     <SensorChart data={sensorHistory.length > 0 ? sensorHistory : sensors} />
                   </div>
+                  
                 </section>
 
                 <section className="row g-3">

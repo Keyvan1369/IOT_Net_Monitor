@@ -10,86 +10,70 @@ import {
   Legend,
 } from "recharts";
 
-const sensorData = [
-  { time: "10:00", temperature: 23.1, humidity: 51 },
-  { time: "10:05", temperature: 23.5, humidity: 53 },
-  { time: "10:10", temperature: 24.0, humidity: 52 },
-  { time: "10:15", temperature: 23.8, humidity: 56 },
-  { time: "10:20", temperature: 24.6, humidity: 55.2 },
-  { time: "10:25", temperature: 24.3, humidity: 54 },
-  { time: "10:30", temperature: 24.8, humidity: 57 },
-];
+function SensorChart({ data = [] }) {
+  const chartData = data.map((reading) => ({
+    time: new Date(reading.receivedAt).toLocaleTimeString(),
+    temperature: reading.temperature ?? null,
+    humidity: reading.humidity ?? null,
+  }));
 
-function SensorChart() {
   return (
-    <div className="panel">
-      <div className="panel-heading">
+    <div className="card dashboard-card p-3">
+      <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h5>Sensor History</h5>
-          <p>Temperature and humidity over time</p>
+          <h5 className="mb-1">Sensor History</h5>
+          <small className="text-secondary">
+            Live updates from backend
+          </small>
         </div>
-        <span className="live-badge">DEMO DATA</span>
+
+        <span className="badge bg-success">
+          {data.length} Readings
+        </span>
       </div>
 
-      <div style={{ width: "100%", height: 300 }}>
-        <ResponsiveContainer>
-          <LineChart data={sensorData}>
-            <CartesianGrid stroke="#263247" strokeDasharray="3 3" />
+      {chartData.length === 0 ? (
+        <div className="text-secondary py-5 text-center">
+          No sensor data available yet.
+        </div>
+      ) : (
+        <div style={{ width: "100%", height: 300 }}>
+          <ResponsiveContainer>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#343a40" />
 
-            <XAxis
-              dataKey="time"
-              stroke="#8392aa"
-              tick={{ fontSize: 11 }}
-            />
+              <XAxis
+                dataKey="time"
+                stroke="#adb5bd"
+                tick={{ fontSize: 11 }}
+              />
 
-            <YAxis
-              yAxisId="temperature"
-              stroke="#ffb66c"
-              tick={{ fontSize: 11 }}
-              domain={["auto", "auto"]}
-            />
+              <YAxis stroke="#adb5bd" />
 
-            <YAxis
-              yAxisId="humidity"
-              orientation="right"
-              stroke="#69c5ff"
-              tick={{ fontSize: 11 }}
-              domain={[0, 100]}
-            />
+              <Tooltip />
+              <Legend />
 
-            <Tooltip
-              contentStyle={{
-                background: "#111c2e",
-                border: "1px solid #263247",
-                borderRadius: 8,
-                color: "#e5edf8",
-              }}
-            />
+              <Line
+                type="monotone"
+                dataKey="temperature"
+                name="Temperature (°C)"
+                stroke="#ff7043"
+                strokeWidth={2}
+                connectNulls
+              />
 
-            <Legend />
-
-            <Line
-              yAxisId="temperature"
-              type="monotone"
-              dataKey="temperature"
-              name="Temperature (°C)"
-              stroke="#ffb66c"
-              strokeWidth={2}
-              dot={false}
-            />
-
-            <Line
-              yAxisId="humidity"
-              type="monotone"
-              dataKey="humidity"
-              name="Humidity (%)"
-              stroke="#69c5ff"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+              <Line
+                type="monotone"
+                dataKey="humidity"
+                name="Humidity (%)"
+                stroke="#42a5f5"
+                strokeWidth={2}
+                connectNulls
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }
