@@ -22,9 +22,15 @@ const io = new Server(server, {
   cors: { origin: FRONTEND_ORIGIN },
 });
 
-
+const {
+  fetchEnvironment,
+  getEnvironmentStatus,
+} = require("./services/raspberryService");
 const latestReadings = new Map();
 const sensorHistory = [];
+let raspberryPollingStarted = false;
+let raspberryPollingTimer = null;
+
 
 const devices = [
   {
@@ -71,6 +77,9 @@ app.get("/api/health", (req, res) => {
     service: "iot-network-monitor",
     timestamp: new Date().toISOString(),
   });
+});
+app.get("/api/environment/latest", (req, res) => {
+  res.json(getEnvironmentStatus());
 });
 
 app.get("/api/devices", (req, res) => {
@@ -128,6 +137,33 @@ app.post("/api/sensors", (req, res) => {
     reading,
   });
 });
+async function startRaspberryMonitoring() {
+  if (raspberryPollingStarted) return;
+
+  raspberryPollingStarted = true;
+
+  console.log("Starting Raspberry Pi monitoring...");
+
+  const poll = async () => {
+    const data = await fetchEnvironment();
+
+    if (data) {
+      io.emit("environment:update", {
+        data,
+        status: "online",
+        lastSuccessfulUpdate: new Date().toISOString(),
+      });
+
+      console.log("[Raspberry Pi] Environment data received");
+    } else {
+      io.emit("environment:status", getEnvironmentStatus());
+    }
+  };
+
+  await poll();
+
+  raspberryPollingTimer = setInterval(poll, 5000);
+}
 
 io.on("connection", (socket) => {
   console.log("Dashboard connected:", socket.id);
@@ -142,4 +178,5 @@ io.on("connection", (socket) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`API running on port ${PORT}`);
   console.log(`Allowed frontend origin: ${FRONTEND_ORIGIN}`);
+  startRaspberryMonitoring();
 });
