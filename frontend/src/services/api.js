@@ -30,11 +30,23 @@ export async function getHealth() {
 
   return response.json();
 }
+
 export async function getSensorHistory() {
   const response = await fetch(`${API_URL}/sensors/history`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch sensor history");
+  }
+
+  return response.json();
+}
+
+
+export async function getEnvironmentLatest() {
+  const response = await fetch(`${API_URL}/environment/latest`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch environment data");
   }
 
   return response.json();
