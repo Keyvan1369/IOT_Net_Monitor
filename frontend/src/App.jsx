@@ -3,7 +3,14 @@ import Sidebar from "./components/Sidebar";
 import StatCard from "./components/StatCard";
 import DeviceTable from "./components/DeviceTable";
 import SensorChart from "./components/SensorChart";
-import { getDevices, getLatestSensors, getHealth, getSensorHistory } from "./services/api";
+import {
+  getDevices,
+  getLatestSensors,
+  getHealth,
+  getSensorHistory,
+  getEnvironmentLatest,
+} from "./services/api";
+import { io } from "socket.io-client";
 
 function App() {
   const [activePage, setActivePage] = useState("Overview");
@@ -13,29 +20,48 @@ function App() {
   const [backendStatus, setBackendStatus] = useState("Checking");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [environment, setEnvironment] = useState(null);
+  const [raspberryStatus, setRaspberryStatus] = useState("Checking");
+  const [lastEnvironmentUpdate, setLastEnvironmentUpdate] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadDashboard() {
       try {
-        const [deviceData, sensorData, healthData, historyData] = await Promise.all([
-          getDevices(),
-          getLatestSensors(),
-          getHealth(),
-          getSensorHistory()
-        ]);
+        const [deviceData, sensorData, healthData, historyData] =
+          await Promise.all([
+            getDevices(),
+            getLatestSensors(),
+            getHealth(),
+            getSensorHistory(),
+          ]);
 
         if (cancelled) return;
 
-        setDevices(deviceData || []);
-        setSensors(sensorData || []);
-        setSensorHistory(historyData || []);
+        setDevices(Array.isArray(deviceData) ? deviceData : []);
+        setSensors(Array.isArray(sensorData) ? sensorData : []);
+        setSensorHistory(Array.isArray(historyData) ? historyData : []);
         setBackendStatus(healthData?.status === "ok" ? "Online" : "Offline");
         setError("");
-      } catch (err) {
-        if (cancelled) return;
 
+        try {
+          const environmentData = await getEnvironmentLatest();
+          if (cancelled) return;
+
+          setEnvironment(environmentData?.data ?? null);
+          setRaspberryStatus(
+            environmentData?.status === "online" ? "Online" : "Offline"
+          );
+          setLastEnvironmentUpdate(
+            environmentData?.lastSuccessfulUpdate ?? null
+          );
+        } catch {
+          if (cancelled) return;
+          setRaspberryStatus("Offline");
+        }
+      } catch {
+        if (cancelled) return;
         setBackendStatus("Offline");
         setError("Cannot connect to the backend. Check that it is running.");
       } finally {
@@ -50,10 +76,67 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const SOCKET_URL =
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:3002";
+
+    const socket = io(SOCKET_URL);
+
+    socket.on("environment:update", (payload) => {
+      setEnvironment(payload?.data ?? null);
+      setRaspberryStatus(
+        payload?.status === "offline" ? "Offline" : "Online"
+      );
+      if (payload?.lastSuccessfulUpdate) {
+        setLastEnvironmentUpdate(payload.lastSuccessfulUpdate);
+      }
+    });
+
+    socket.on("environment:status", (statusPayload) => {
+      setRaspberryStatus(
+        statusPayload?.status === "online" ? "Online" : "Offline"
+      );
+
+      if (statusPayload?.lastSuccessfulUpdate) {
+        setLastEnvironmentUpdate(statusPayload.lastSuccessfulUpdate);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   const latestSensor = sensors.length > 0 ? sensors[sensors.length - 1] : null;
-  const tempValue = latestSensor?.temperature != null ? `${latestSensor.temperature} °C` : "N/A";
-  const humidityValue = latestSensor?.humidity != null ? `${latestSensor.humidity}%` : "N/A";
-  const onlineDevicesCount = devices.filter((d) => d.status === "Online").length;
+  const activeTemp =
+    environment?.temperature ??
+    environment?.temp_aht20 ??
+    environment?.temp_bmp280 ??
+    latestSensor?.temperature;
+  const activeHumidity = environment?.humidity ?? latestSensor?.humidity;
+
+  const tempValue =
+    activeTemp != null ? `${Number(activeTemp).toFixed(1)} °C` : "N/A";
+  const humidityValue =
+    activeHumidity != null ? `${Number(activeHumidity).toFixed(1)}%` : "N/A";
+  const aht20TempValue =
+    environment?.temp_aht20 != null
+      ? `${Number(environment.temp_aht20).toFixed(1)} °C`
+      : "N/A";
+  const bmp280TempValue =
+    environment?.temp_bmp280 != null
+      ? `${Number(environment.temp_bmp280).toFixed(1)} °C`
+      : "N/A";
+  const pressureValue =
+    environment?.pressure != null
+      ? `${Number(environment.pressure).toFixed(1)} hPa`
+      : "N/A";
+  const labelValue = environment?.label ?? "N/A";
+
+  const onlineDevicesCount = devices.filter(
+    (d) => d.status === "Online"
+  ).length;
+  const chartData = sensorHistory.length > 0 ? sensorHistory : sensors;
 
   return (
     <div className="dashboard">
@@ -64,15 +147,21 @@ function App() {
           <div>
             <h5>{activePage}</h5>
             <p>IoT Network Monitoring System</p>
-            <p>test automation</p>
-
-
           </div>
 
-          <span className={`connection-status ${backendStatus.toLowerCase()}`}>
-            <span className="status-dot"></span>
-            Backend: {backendStatus}
-          </span>
+          <div className="d-flex gap-2">
+            <span
+              className={`connection-status ${raspberryStatus.toLowerCase()}`}
+            >
+              <span className="status-dot"></span>
+              Raspberry Pi: {raspberryStatus}
+            </span>
+
+            <span className={`connection-status ${backendStatus.toLowerCase()}`}>
+              <span className="status-dot"></span>
+              Backend: {backendStatus}
+            </span>
+          </div>
         </header>
 
         {error && <div className="alert alert-danger m-3">{error}</div>}
@@ -109,22 +198,21 @@ function App() {
                     value={tempValue}
                     icon="bi-thermometer-half"
                     color="orange"
-                    subtitle=""
+                    subtitle={`AHT20: ${aht20TempValue} · BMP280: ${bmp280TempValue}`}
                   />
                   <StatCard
                     title="Humidity"
                     value={humidityValue}
                     icon="bi-droplet"
                     color="purple"
-                    subtitle=""
+                    subtitle={`Pressure: ${pressureValue} · Status: ${labelValue}`}
                   />
                 </section>
 
                 <section className="row g-3 mb-4">
                   <div className="col-12">
-                    <SensorChart data={sensorHistory.length > 0 ? sensorHistory : sensors} />
+                    <SensorChart data={chartData} />
                   </div>
-
                 </section>
 
                 <section className="row g-3">
@@ -152,8 +240,11 @@ function App() {
                       <div className="sensor-reading">
                         <i className="bi bi-thermometer-half sensor-symbol orange-text"></i>
                         <div>
-                          <small>Temperature</small>
+                          <small>Temperature (AHT20 / BMP280)</small>
                           <h4>{tempValue}</h4>
+                          <small className="text-secondary">
+                            AHT20: {aht20TempValue} · BMP280: {bmp280TempValue}
+                          </small>
                         </div>
                       </div>
 
@@ -162,10 +253,19 @@ function App() {
                         <div>
                           <small>Humidity</small>
                           <h4>{humidityValue}</h4>
+                          <small className="text-secondary">
+                            Pressure: {pressureValue} · Label: {labelValue}
+                          </small>
                         </div>
                       </div>
 
-                      <div className="info-note"></div>
+                      <div className="info-note">
+                        {lastEnvironmentUpdate && (
+                          <small className="text-secondary">
+                            Last env update: {lastEnvironmentUpdate}
+                          </small>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -190,10 +290,12 @@ function App() {
                   <h5>Sensor Monitoring</h5>
                 </div>
                 <p className="text-secondary mb-3">
-                  Temperature: {tempValue} · Humidity: {humidityValue}
+                  Temperature: {tempValue} (AHT20: {aht20TempValue} · BMP280:{" "}
+                  {bmp280TempValue}) · Humidity: {humidityValue} · Pressure:{" "}
+                  {pressureValue} · Label: {labelValue}
                 </p>
 
-                <SensorChart data={sensorHistory.length > 0 ? sensorHistory : sensors} />
+                <SensorChart data={chartData} />
               </div>
             )}
 
