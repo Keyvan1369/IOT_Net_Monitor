@@ -48,7 +48,7 @@ const devices = [
   {
     id: "raspberry-pi",
     name: "Raspberry Pi",
-    ip: "192.168.1.20",
+    ip:  "192.168.10.2",
     type: "Collector",
   },
   {
